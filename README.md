@@ -2,6 +2,14 @@
  <img alt="pipecat" width="300px" height="auto" src="https://raw.githubusercontent.com/pipecat-ai/pipecat/main/pipecat.png">
 </div></h1>
 
+## Quick Start
+clone repo, python bot_runner.py, open a second terminal, curl -X POST localhost:7860/start -H "Content-Type: application/json" -d '{"config":{"simple_dialin":{"testInPrebuilt":true}}}', copy Daily room URL from response, join room in browser, wait 10 seconds without speaking to see TTS prompt, repeat silence until bot hangs up on the third prompt, check call_summaries.log for JSON summary.
+
+## What I Added
+silence detection after 10 seconds of no user speech, TTS prompt that asks the user to speak, counter for silence events per call, graceful termination after three unanswered prompts, session start‑time tracking, post‑call summary written to call_summaries.log with duration, silence_events, terminated_by_bot flags.
+
+
+
 [![PyPI](https://img.shields.io/pypi/v/pipecat-ai)](https://pypi.org/project/pipecat-ai) ![Tests](https://github.com/pipecat-ai/pipecat/actions/workflows/tests.yaml/badge.svg) [![codecov](https://codecov.io/gh/pipecat-ai/pipecat/graph/badge.svg?token=LNVUIVO4Y9)](https://codecov.io/gh/pipecat-ai/pipecat) [![Docs](https://img.shields.io/badge/Documentation-blue)](https://docs.pipecat.ai) [![Discord](https://img.shields.io/discord/1239284677165056021)](https://discord.gg/pipecat)
 
 # 🎙️ Pipecat: Real-Time Voice & Multimodal AI Agents
