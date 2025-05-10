@@ -6,9 +6,11 @@
 import argparse
 import asyncio
 import os
+import json
 import sys
 
 from call_connection_manager import CallConfigManager, SessionManager
+from processors.silence_detector import SilenceDetector
 from dotenv import load_dotenv
 from loguru import logger
 
@@ -139,10 +141,21 @@ async def main(
 
     # ------------ PIPELINE SETUP ------------
 
+    # create silence detector: prompt after 10s, hang up after 3 tries
+    silence = SilenceDetector(
+        tts_prompt="Hi there, please say something or I will hang up.",
+        llm=llm,
+        timeout=10,
+        max_retries=3,
+)
+    
+    silence.session_manager = session_manager # Set session manager for silence detector
+
     # Build pipeline
     pipeline = Pipeline(
         [
             transport.input(),  # Transport user input
+            silence,  # Silence detector
             context_aggregator.user(),  # User responses
             llm,  # LLM
             tts,  # TTS
@@ -153,6 +166,8 @@ async def main(
 
     # Create pipeline task
     task = PipelineTask(pipeline, params=PipelineParams(allow_interruptions=True))
+    asyncio.create_task(silence.on_no_activity())
+
 
     # ------------ EVENT HANDLERS ------------
 
@@ -166,6 +181,16 @@ async def main(
     async def on_participant_left(transport, participant, reason):
         logger.debug(f"Participant left: {participant}, reason: {reason}")
         await task.cancel()
+
+        duration = time.time() - session_manager.start_time
+        summary = {
+            "duration_secs": round(duration),
+            "silence_events": session_manager.silence_events,
+            "terminated_by_bot": session_manager.call_flow_state.call_terminated,
+        }
+        with open("call_summaries.log", "a") as f:
+            f.write(json.dumps(summary) + "\\n")
+        print("Call summary", summary)
 
     # ------------ RUN PIPELINE ------------
 

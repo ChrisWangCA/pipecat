@@ -12,6 +12,7 @@ contact information. Also includes call state management.
 
 import json
 import os
+import time
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
@@ -111,6 +112,8 @@ class SessionManager:
             "bot": None,
             # Add other participant types as needed
         }
+        self.start_time = time.time() # Call start time
+        self.silence_events = 0  # Number of silence events detected
 
         # References for easy access in processors that need mutable containers
         self.session_id_refs = {
